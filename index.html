@@ -3,7 +3,7 @@
 <!-- 保持允许缩放 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <meta name="referrer" content="no-referrer">
-<title>SHHis 剧情整理生成器 v9.5 (稳定导出版)</title>
+<title>SHHis 剧情整理生成器 v10.0 (标题滚动修复版)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   /* === 全局样式 === */
@@ -221,13 +221,13 @@
       .external-text { font-size: 13px; }
   }
   
-  /* --- 移动端深度优化 (V9.3) --- */
+  /* --- 移动端深度优化 (V10.0 标题修复版) --- */
   @media (max-width: 600px) {
       body { padding: 5px; padding-top: 50px; }
       .header { padding: 20px 10px; }
       .header h1 { font-size: 22px; }
       
-      /* 卡片高度固定，不再无限拉长 */
+      /* 卡片高度固定 */
       .card { 
           height: 145px !important; 
           min-height: 145px; 
@@ -246,71 +246,122 @@
           display: flex; 
           flex-direction: column;
           flex-grow: 1;
-          height: 100%; /* 占满高度 */
+          height: 100%; 
           box-sizing: border-box;
+          min-width: 0; /* 关键：允许 flex item 内部滚动生效 */
       }
       
-      /* 标题禁止压缩 */
+      /* 标题：不换行，可横向滑动 (最终修复) */
       .card-title { 
-          white-space: normal; 
+          white-space: nowrap; 
+          overflow-x: auto; 
+          scrollbar-width: none; 
           font-size: 15px; 
           line-height: 1.3;
           margin-bottom: 4px;
-          flex: 0 0 auto; /* 禁止缩放 */
+          flex: 0 0 auto; 
+          display: block;      /* 强制块级显示 */
+          width: 100%;         /* 占满容器 */
+          max-width: 100%;     /* 限制宽度触发滚动 */
       }
+      .card-title::-webkit-scrollbar { display: none; }
       
-      /* BV行禁止压缩，允许内部换行 */
+      /* BV行：允许换行 */
       .bv-row { 
           display: flex;
-          flex-wrap: wrap !important; /* 强制允许换行 */
+          flex-wrap: wrap !important;
           gap: 6px; 
           align-items: center; 
           margin-bottom: 4px;
           width: 100%;
-          flex: 0 0 auto; /* 禁止缩放 */
+          flex: 0 0 auto; 
+          max-width: 100%;
       }
       
+      /* BV组合容器 */
       .bv-group { 
           display: flex;
           align-items: center;
           gap: 6px;
-          flex: 1 1 auto; 
+          flex: 1 1 auto;
           min-width: 0;
           position: relative;
+          overflow-x: auto;
+          white-space: nowrap;
+          scrollbar-width: none;
+          max-width: 100%;
       }
+      .bv-group::-webkit-scrollbar { display: none; }
       
       .bv-code {
           max-width: none; 
           overflow: visible;
-          white-space: normal;
-          word-break: break-all;
+          white-space: nowrap;
           font-size: 11px;
       }
       
-      /* 日期标签强制显示 */
+      /* 日期标签 */
       .date-tag { 
           font-size: 11px; 
           background: #f4f4f4;
           white-space: nowrap;
           margin-left: 0;
-          flex: 0 0 auto; /* 不许压缩 */
-          margin-top: 2px;
+          flex: 0 0 auto; 
+          margin-top: 0;
           display: inline-block;
+          max-width: 100%;
+          overflow-x: auto; 
+          scrollbar-width: none;
       }
+      .date-tag::-webkit-scrollbar { display: none; }
       
-      /* 简介区域：占据剩余空间，出滚动条 */
+      /* 简介区域 */
       .note-box { 
           font-size: 11px; 
           padding: 4px 6px; 
-          min-height: 0; /* 允许 Flex 子项缩小 */
-          flex: 1 1 auto; /* 自动占据剩余高度 */
-          overflow-y: auto; /* 超出出滚动条 */
+          min-height: 0; 
+          flex: 1 1 auto; 
+          overflow-y: auto; 
           line-height: 1.3;
           margin-top: 0;
-          max-height: none; /* 移除 max-height，由 flex 控制 */
+          max-height: none; 
       }
 
-      /* Mode B 适配 */
+      /* === Mode B (广播剧) 移动端专属优化 (修复日期掉落) === */
+      body.mode-b .card {
+          height: auto !important;
+          min-height: 72px;
+          flex-direction: row;
+          align-items: center;
+      }
+      
+      body.mode-b .info-area {
+          justify-content: center;
+          gap: 4px;
+          padding: 5px 15px;
+      }
+      
+      /* 关键修改：Mode B 下强制不换行，支持滑动，防止日期掉落 */
+      body.mode-b .bv-row {
+          flex-wrap: nowrap !important; /* 强制单行 */
+          overflow-x: auto; /* 允许横向滑动 */
+          scrollbar-width: none; /* 隐藏滚动条 */
+          gap: 8px;
+          margin-bottom: 0;
+          align-items: center;
+      }
+      body.mode-b .bv-row::-webkit-scrollbar { display: none; }
+      
+      /* 修正 Mode B 日期位置 */
+      body.mode-b .date-tag {
+          margin: 0;
+          background: transparent;
+          padding-left: 0;
+          color: #888;
+          flex-shrink: 0; /* 防止日期被压缩 */
+      }
+
+      /* Mode B 外部链接部分 */
       .external-info-box { flex-direction: column; align-items: center; text-align: center; gap: 15px; }
       .external-text { width: 100%; box-sizing: border-box; border-left: none; border-top: 3px solid var(--shhis-green); }
       .external-link-row { justify-content: center; }
@@ -474,9 +525,9 @@
   .modal-btn { padding: 5px 10px; background: #eee; border-radius: 4px; cursor: pointer; border:none; margin-top:5px;}
 </style>
 </head>
-<body ondragover="handleDragOver(event)" class="mode-a">
+<body class="view-mode" ondragover="handleDragOver(event)" class="mode-a">
 
-<div id="loadingOverlay" style="display: none;"><div>🖼️ 正在生成...</div></div>
+<div id="loadingOverlay"><div>🖼️ 图片生成中...</div></div>
 
 <!-- 头部标题栏 -->
 <div class="canvas" id="canvasArea">
@@ -1959,17 +2010,17 @@
             <div class="external-info-box">
                 <!-- 左侧二维码 -->
                 <div class="qr-item-b">
-                    <div class="qr-box-b" onclick="triggerUpload(this)" id="modeB-qr"><img src="data:image/png;base64,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" style="width:100%;height:100%;object-fit:cover"></div>
+                    <div class="qr-box-b" onclick="triggerUpload(this)" id="modeB-qr"><span>上传<br>二维码</span></div>
                     <div class="qr-label-b">扫码直达</div>
                 </div>
                 <!-- 右侧文字说明 -->
                 <div class="external-text">
-                    <div contenteditable="true" id="modeB-desc" style="outline:none; min-height:40px;">有关偶像大师闪耀色彩的全剧情分时序/角色整理，已经有其他大佬做过，这里放上链接以及二维码，可以去那边观看。<div>关于棱镜之歌的剧情，个人认为其与原enza剧情的时间差异实在过大，且大部分剧情过于简略无趣，我认为在观看完enza的大部分剧情之后，棱镜之歌的剧情可以挑选自己喜欢的看。个人推荐【Keep Running】以及【霧鐘歌】这两个新曲活动剧情。</div></div>
+                    <div contenteditable="true" id="modeB-desc" style="outline:none; min-height:40px;">有关偶像大师闪耀色彩的全剧情分时序/角色整理，已经有其他大佬做过，这里放上链接以及二维码，可以去那边观看。<br>关于棱镜之歌的剧情，个人认为其与原enza剧情的时间差异实在过大，且大部分剧情过于简略无趣，我认为在观看完enza的大部分剧情之后，棱镜之歌的剧情可以挑选自己喜欢的看。个人推荐【Keep Running】以及【霧鐘歌】这两个新曲活动剧情。</div>
                     <div class="external-link-row">
                         <button onclick="handleModeBLinkClick()" class="external-link-btn" id="modeB-btn">🚀 跳转至外部整理页</button>
                         <button class="edit-link-icon" onclick="editModeBLink()" title="修改链接">✏️</button>
                     </div>
-                    <a href="https://docs.qq.com/aio/DTHRnREJ1TWdHWE9D?u=777ef4a964fe4fd3b581c97544ff5009&amp;nlc=1&amp;p=9S9oZPjo8YBo5YlyCHU8Kw" target="_blank" id="modeB-link" style="display:none;"></a>
+                    <a href="https://www.bilibili.com/" target="_blank" id="modeB-link" style="display:none;"></a>
                 </div>
             </div>
         </div>
@@ -1977,511 +2028,7 @@
         <!-- 下半部分：广播剧 & 衍生 -->
         <div class="column" style="width:100%">
             <div class="column-header border-red">🎧 广播剧等衍生剧情</div>
-            <div class="card-list" id="list-b-bottom"><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2Fc660e7a949e54560cfb7925b4fe3d0a168e76bb5.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">专辑LW08 广播剧「匣の中」</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1BM4y1v7do</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2021.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2Ff54474e9defae78c47891c5e65d1931790c38019.png&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 196期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV15a411G72t</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2022.06</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2Fa31ae952ff188f4af2510ad6481738a785dd2c8c.png&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 204期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1PG4y1Z73S</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2022.8</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2Fd037a904b5708721f220e57069f217707258a902.png&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 212期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1LG4y1Z7Ri</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2022.10</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2F360d33e8d4d931fb7831e84bb69957f21000d611.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 221期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1Eh4y1b7vr</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2022.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F5f09503c1d0d835aa457f19b699d972ea87974b9.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">专辑PW08 广播剧 「POP OUT」</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1JW4y1W76X</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2022.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2Fdad5cb319fdb72ccfc578790ee5381879a25b007.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 228期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1vk4y1j77q</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.01</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2F97eab82d193fc3c11bcd01b93b46a81efb4f3cc8.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 235期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1Qh411V77p</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.03</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F607f3aa477ff143819f31cc1138d6f2a096fee7c.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 244期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1p24y1A7CM</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.05</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2F49b324c5345f27feca25434ba5c471ef1137ecf4.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 251期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV19V411T7P3</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.07</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2Fc3c55aeba88b302dc936ec7877f0d5ef2b92c8f5.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 259期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1dw411v76b</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.09</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2Fd7da580e658ff31ba5f3e9efddbfd20778641bde.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">专辑CA07 广播剧 「秋の日のラウンド・アンド・ラウンド」</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1xK411b72E</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F63fec0444284d3ce02bfea5c1277af52dbc63cd8.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 267期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1vu4y1N7gf</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2023.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2F10bca728d6b34be2fb38248691fe7b95ae1da1f9.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 275期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1RK411e776</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.01</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2Faf18421dae9c819cc6db551018bf889eda066225.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">闪彩广播 284期 SHHis广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1Jr421p743</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.03</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F50c9572ccdb37f3d9c1ce57eada4f4f1bf8b21bc.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">事务的光空记录 第一卷特典广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1hq421c7CR</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.04</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2Fa5aa85e62ec18e671e81041116395a8343d917e1.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">SHHis style book特典CD广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1vr421K7s1</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.06</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F0bb8edda9a3a2f2256af3f41420c6264631400bb.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">事物的光空记录 第二卷特典广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1fYx9egEqa</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.10</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi1.hdslb.com%2Fbfs%2Farchive%2F8255c73e2f745c874838741b95878f4e38987937.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">专辑Echoes07 广播剧 [warmth]</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1uzUAY9EbM</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2024.11</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi2.hdslb.com%2Fbfs%2Farchive%2F03204ddfb805600e3df229f3e10151343bb0b945.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">事务的光空记录 第三卷特典广播剧</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1NZ7hzdEBi</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2025.04</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div><div class="card" data-style="normal" draggable="true" data-type-color="black">
-      <div class="card-actions" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">
-        <button class="action-btn btn-copy" onclick="duplicateCard(this)">⧉</button>
-        <button class="action-btn btn-swap" onclick="moveCardColumn(this)">⇄</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,-1)">↑</button>
-        <button class="action-btn btn-move" onclick="moveCard(this,1)">↓</button>
-        <button class="action-btn btn-del" onclick="deleteCard(this)">×</button>
-      </div>
-      <div class="cover-area" onclick="triggerUpload(this)"><img src="https://images.weserv.nl/?url=https%3A%2F%2Fi0.hdslb.com%2Fbfs%2Farchive%2F2e728b79f8aa8ef7628c7160c41ff1e49d617c05.jpg&amp;output=jpg&amp;w=300&amp;h=200&amp;fit=cover">
-        <span class="cover-text" style="display: none;">封面</span>
-        <div class="badge" data-color="black" data-type-id="Other" onclick="cycleBadge(event, this)" onmousedown="event.stopPropagation()">其他</div>
-      </div>
-      <div class="info-area">
-        <div class="card-title" contenteditable="true">专辑円環Halo Around 01 广播剧「回号のインタトワィニング・ギア」</div>
-        <div class="bv-row">
-          <div class="bv-group">
-             <div class="bv-code" contenteditable="true">BV1V4T4zNE1s</div>
-             <button class="bv-magic-btn" onclick="autoFillFromBilibili(this)" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">🪄</button>
-             <a href="javascript:void(0)" onclick="openLinkOrBilibili(this)" class="bv-jump-btn" data-html2canvas-ignore="true" onmousedown="event.stopPropagation()">▶</a>
-          </div>
-          <div class="date-tag" contenteditable="true">2025.06</div>
-        </div>
-        <div class="note-box" contenteditable="true">简介...</div>
-      </div>
-    </div></div>
+            <div class="card-list" id="list-b-bottom"></div>
             <div class="column-add-area" data-html2canvas-ignore="true">
                 <div class="column-add-btn" onclick="addCard('list-b-bottom')">➕ 添加卡片</div>
             </div>
@@ -2492,7 +2039,7 @@
 
   <div class="footer">
     <div class="footer-info">
-      <span class="footer-title" contenteditable="true">更多 </span>
+      <span class="footer-title" contenteditable="true">更多数据与资料 / MORE INFO</span>
       <div class="footer-text" contenteditable="true">
         整理/制作者: suzuki<br>请使用电脑浏览器访问本页以获取最佳体验。
       </div>
@@ -2508,7 +2055,7 @@
 </div>
 
 <button id="exitViewBtn" onclick="toggleViewMode(false)">🔙 退出访客模式</button>
-<div class="guest-controls" style="display: none;">
+<div class="guest-controls" style="display:none;">
     <button class="btn btn-export" onclick="exportToImage()" style="box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🖼️ 导出为图片</button>
 </div>
 
@@ -2933,6 +2480,7 @@
       document.querySelectorAll('.card, .spacer-block').forEach(attachItemDragEvents);
   }
 
+  // Used for View Mode / Publish
   function deserializeGlobal(data, mode) {
       if (mode === 'A') {
           document.getElementById('list-left').innerHTML = '';
@@ -2946,6 +2494,7 @@
           if(data.topLink) document.getElementById('modeB-link').href = data.topLink;
           if(data.topQr) document.getElementById('modeB-qr').innerHTML = `<img src="${data.topQr}" style="width:100%;height:100%;object-fit:cover">`;
       }
+      // 修复发布模式下的 QR 恢复
       if (data && data.footer) {
           const qrBox = document.getElementById('qr1');
           if (data.footer.qrSrc) {
@@ -3058,7 +2607,17 @@
       saveCurrentModeData();
       const da = localStorage.getItem(KEY_MODE_A)||'null';
       const db = localStorage.getItem(KEY_MODE_B)||'null';
-      let html = document.documentElement.outerHTML.replace('<head>', `<head><script>window.PRELOADED_DATA_A=${da};window.PRELOADED_DATA_B=${db};<\/script>`);
+      
+      // 1. 获取当前HTML结构
+      let html = document.documentElement.outerHTML;
+      
+      // 2. 注入数据脚本
+      html = html.replace('<head>', `<head><script>window.PRELOADED_DATA_A=${da};window.PRELOADED_DATA_B=${db};<\/script>`);
+      
+      // 3. 关键修改：直接在导出时给body添加 class="view-mode"
+      // 这样打开瞬间就是预览模式，彻底杜绝闪屏
+      html = html.replace('<body', '<body class="view-mode"');
+      
       const blob = new Blob([html],{type:'text/html'});
       const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='SHHis_Guide_Publish.html'; a.click();
   }
