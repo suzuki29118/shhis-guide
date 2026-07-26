@@ -1340,56 +1340,130 @@
       const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='SHHis_Guide_Publish.html'; a.click();
   }
   
+  function extractJsonFromText(text) {
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{')) return JSON.parse(trimmed);
+      const start = trimmed.indexOf('{"code"');
+      const end = trimmed.lastIndexOf('}');
+      if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1));
+      throw new Error('响应里没有找到可解析的 JSON');
+  }
+
+  async function fetchJsonWithTimeout(url, timeoutMs = 12000) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+          const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const text = await res.text();
+          return extractJsonFromText(text);
+      } finally {
+          clearTimeout(timer);
+      }
+  }
+
+  async function fetchBilibiliData(bv) {
+      const targetUrl = 'https://api.bilibili.com/x/web-interface/view?bvid=' + encodeURIComponent(bv);
+      const sources = [
+          'https://r.jina.ai/http://r.jina.ai/http://' + targetUrl,
+          'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl),
+          'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
+          'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl)
+      ];
+      const errors = [];
+      for (const url of sources) {
+          try {
+              const json = await fetchJsonWithTimeout(url);
+              const data = json.data || json;
+              if (json.code === 0 && data && data.title) return data;
+              if (data && data.title) return data;
+              errors.push('接口返回异常');
+          } catch (e) {
+              console.warn('Bilibili metadata source failed:', url, e);
+              errors.push(e.message || String(e));
+          }
+      }
+      throw new Error(errors.slice(0, 3).join(' / '));
+  }
+
+  function buildCoverCandidates(picUrl) {
+      if (!picUrl) return [];
+      const httpsUrl = picUrl.replace(/^http:/, 'https:');
+      const noProtocol = httpsUrl.replace(/^https?:\/\//, '');
+      return [
+          'https://images.weserv.nl/?url=' + encodeURIComponent(httpsUrl) + '&output=jpg&w=300&h=200&fit=cover',
+          'https://wsrv.nl/?url=' + encodeURIComponent(noProtocol) + '&output=jpg&w=300&h=200&fit=cover',
+          httpsUrl
+      ];
+  }
+
+  function loadCoverImage(candidates) {
+      return new Promise((resolve, reject) => {
+          let idx = 0;
+          const tryNext = () => {
+              if (idx >= candidates.length) {
+                  reject(new Error('封面图片加载失败'));
+                  return;
+              }
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => resolve(img);
+              img.onerror = () => {
+                  console.warn('Cover image failed:', candidates[idx]);
+                  idx += 1;
+                  tryNext();
+              };
+              img.src = candidates[idx];
+          };
+          tryNext();
+      });
+  }
+
   async function autoFillFromBilibili(btn) {
       const card = btn.closest('.card');
       let bv = card.querySelector('.bv-code').innerText.trim();
       const linkMatch = bv.match(/BV[a-zA-Z0-9]+/);
       if (linkMatch) bv = linkMatch[0];
-      if (!bv.startsWith('BV')) return alert('请确保填写了正确的BV号');
+      if (!/^BV[a-zA-Z0-9]+$/.test(bv)) return alert('请确保填写了正确的BV号');
 
-      const oldText = btn.innerText; btn.innerText = '⌛';
-      const targetUrl = `https://api.bilibili.com/x/web-interface/view?bvid=${bv}`;
-      const proxies = [
-          url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-          url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-          url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-      ];
+      const oldText = btn.innerText;
+      btn.innerText = '⌛';
+      btn.disabled = true;
 
-      let data = null;
-      let success = false;
-      for (const proxyGen of proxies) {
-          try {
-              const res = await fetch(proxyGen(targetUrl));
-              const json = await res.json();
-              if (json.code === 0 || (json.data && json.data.title)) { data = json.data; success = true; break; }
-          } catch (e) { console.warn('Proxy failed:', e); continue; }
-      }
-
-      if (success && data) {
-          card.querySelector('.card-title').innerText = data.title;
+      try {
+          const data = await fetchBilibiliData(bv);
+          card.querySelector('.card-title').innerText = data.title || card.querySelector('.card-title').innerText;
           if (data.pubdate) {
               const dt = new Date(data.pubdate * 1000);
               const y = dt.getFullYear();
               const m = (dt.getMonth() + 1).toString().padStart(2, '0');
               const d = dt.getDate().toString().padStart(2, '0');
-              card.querySelector('.date-tag').innerText = `实装日期:${y}.${m}.${d}`;
+              card.querySelector('.date-tag').innerText = '实装日期:' + y + '.' + m + '.' + d;
           }
-          const picUrl = data.pic.replace(/^http:/, 'https:');
-          const proxyPicUrl = `https://images.weserv.nl/?url=${encodeURIComponent(picUrl)}&output=jpg&w=300&h=200&fit=cover`;
-          const img = new Image();
-          img.onload = () => {
-              const area = card.querySelector('.cover-area');
-              if (area.querySelector('img')) area.querySelector('img').remove();
-              area.prepend(img);
-              area.querySelector('.cover-text').style.display = 'none';
-              triggerSave();
-          };
-          img.src = proxyPicUrl;
+
+          if (data.pic) {
+              try {
+                  const img = await loadCoverImage(buildCoverCandidates(data.pic));
+                  const area = card.querySelector('.cover-area');
+                  if (area.querySelector('img')) area.querySelector('img').remove();
+                  area.prepend(img);
+                  area.querySelector('.cover-text').style.display = 'none';
+              } catch (imgErr) {
+                  console.warn(imgErr);
+                  alert('标题和日期已抓取成功，但封面图片加载失败。可以稍后重试或手动上传封面。');
+              }
+          }
+
           triggerSave();
-          btn.innerText = '✅'; setTimeout(() => btn.innerText = oldText, 2000);
-      } else {
-          alert('抓取失败，B站接口可能限制了访问，请稍后再试或手动填写。');
-          btn.innerText = '❌'; setTimeout(() => btn.innerText = oldText, 2000);
+          btn.innerText = '✅';
+          setTimeout(() => btn.innerText = oldText, 2000);
+      } catch (e) {
+          console.warn('Bilibili autofill failed:', e);
+          alert('抓取失败：' + (e.message || e) + "\n\n可以稍后重试，或手动填写标题/日期并上传封面。");
+          btn.innerText = '❌';
+          setTimeout(() => btn.innerText = oldText, 2000);
+      } finally {
+          btn.disabled = false;
       }
   }
 
