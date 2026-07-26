@@ -726,77 +726,15 @@
 <input type="file" id="imgUpload" accept="image/*" style="display:none">
 
 <!-- 可拖动格式工具栏 (左侧) -->
-<div class="floating-container" id="leftFloater" style="inset: 100px auto auto 20px; z-index: 9999;">
-    <div class="floating-toggle collapsed" id="fmtHandle" title="按住拖动 / 点击折叠" style="cursor: move;">
-        <span>Aa</span> <span class="toggle-arrow">▼</span>
-    </div>
-    <div class="format-toolbar content-panel collapsed" id="fmtToolbar">
-        <div class="fmt-group">
-            <select class="fmt-select" onchange="formatDoc('fontName', this.value); this.value='';">
-            <option value="" disabled="" selected="">字体</option><option>Microsoft YaHei</option><option>SimHei</option><option>SimSun</option><option>KaiTi</option><option>Arial</option><option>Times New Roman</option>
-            </select>
-            <select class="fmt-select" onchange="formatDoc('fontSize', this.value); this.value='';">
-            <option value="" disabled="" selected="">字号</option><option value="1">小</option><option value="2">中</option><option value="3">标准</option><option value="4">中大</option><option value="5">大</option><option value="6">特大</option><option value="7">巨</option>
-            </select>
-        </div>
-        <div class="fmt-group">
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('bold')"><b>B</b></button>
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('italic')"><i>I</i></button>
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')">Tx</button>
-        </div>
-         <div class="fmt-group">
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('justifyLeft')">⫷</button>
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('justifyCenter')">≡</button>
-            <button class="fmt-btn" onmousedown="event.preventDefault()" onclick="formatDoc('justifyRight')">⫸</button>
-        </div>
-        <div class="color-palette">
-            <div class="color-swatch" style="background:#63B694;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#63B694')"></div>
-            <div class="color-swatch" style="background:#760E2A;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#760E2A')"></div>
-            <div class="color-swatch" style="background:#00897B;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#00897B')"></div>
-            <div class="color-swatch" style="background:#222222;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#222222')"></div>
-            <div class="color-swatch" style="background:#888888;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#888888')"></div>
-            <div class="color-swatch" style="background:#E53935;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#E53935')"></div>
-            <div class="color-swatch" style="background:#2196F3;" onmousedown="event.preventDefault()" onclick="formatDoc('foreColor', '#2196F3')"></div>
-        </div>
-         <div style="display:flex; align-items:center; gap:5px; font-size:12px; color:#aaa; margin-top:4px;">
-            <div class="fmt-color-wrapper"><input type="color" class="fmt-color" oninput="formatDoc('foreColor', this.value)"></div>自定义
-        </div>
-    </div>
-</div>
+
 
 <!-- 可拖动控制菜单 (右侧) -->
-<div class="floating-container" id="rightFloater" style="inset: 314px auto auto 1178.88px; z-index: 9999;">
-  <div class="floating-toggle" id="ctrlHandle" title="按住拖动 / 点击折叠" style="cursor: move;">
-    <span>⚙️</span> <span class="toggle-arrow">▼</span>
-  </div>
-  <div class="fixed-controls content-panel" id="fixedControls">
-    <button class="btn btn-view-mode" onclick="toggleViewMode(true)">👁️ 预览/访客模式</button>
-    <button class="btn btn-publish" onclick="exportPublishHTML()">📤 导出发布版</button>
-    <button class="btn btn-help" onclick="toggleHelp(true)">☁️ 帮助</button>
-    <button class="btn btn-data btn-save-emphasis" onclick="exportData()">💾 导出数据</button>
-    <button class="btn btn-data btn-save-emphasis" onclick="exportSiteDataFiles()">📦 导出网站数据文件</button>
-    <button class="btn btn-data" onclick="importData()">📂 导入数据</button>
-    <button class="btn btn-clear" onclick="clearData()">🗑️ 清空重置</button>
-    <div class="auto-save-status" id="saveStatus">已保存</div>
-  </div>
-</div>
+
 
 <!-- 确认与帮助弹窗 -->
-<div id="confirmModal" class="modal-overlay">
-  <div class="modal-content" style="width: 300px;">
-    <h3 style="margin-top:0; color:#333;">❓ 确认操作</h3>
-    <p id="confirmMsg" style="color:#666; margin-bottom: 15px;">确定要执行此操作吗？</p>
-    <label style="display:flex; align-items:center; gap:5px; font-size:13px; color:#666; margin-bottom:20px; cursor:pointer;">
-        <input type="checkbox" id="confirmNoAsk"> 下次不再提示
-    </label>
-    <div style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="modal-btn" onclick="closeConfirm(false)">取消</button>
-        <button class="modal-btn" onclick="closeConfirm(true)" style="background:#e53935; color:white;">确定</button>
-    </div>
-  </div>
-</div>
 
-<div id="publishHelpModal" class="modal-overlay" onclick="if(event.target===this)toggleHelp(false)"><div class="modal-content"><h3>☁️ 发布说明</h3><p>点击“导出发布版”可下载只读HTML文件。</p><button class="modal-btn" onclick="toggleHelp(false)">关闭</button></div></div>
+
+
 
 <script>
   const KEY_MODE_A = 'SHHis_Data_ModeA_v8';
@@ -804,8 +742,8 @@
   const SITE_DATA_MODE_A = 'data/mode-a.json';
   const SITE_DATA_MODE_B = 'data/mode-b.json';
   const urlParams = new URLSearchParams(window.location.search);
-  const isEditMode = urlParams.has('edit');
-  const shouldResetEditData = urlParams.has('reset');
+  const isEditMode = false;
+  const shouldResetEditData = false;
   let currentMode = 'A';
   const saveStatusElement = document.getElementById('saveStatus');
   let siteDataA = null;
@@ -1634,7 +1572,7 @@
           if(url) window.open(url, '_blank');
           else alert("未设置跳转链接");
       } else {
-          if(confirm("当前为【编辑模式】\n\n点击【确定】修改链接\n点击【取消】测试跳转")) {
+          if(confirm("该操作在公开页面不可用。")) {
               editModeBLink();
           } else {
               if(url) window.open(url, '_blank');
