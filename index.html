@@ -1363,27 +1363,7 @@
   }
 
   async function fetchBilibiliData(bv) {
-      const targetUrl = 'https://api.bilibili.com/x/web-interface/view?bvid=' + encodeURIComponent(bv);
-      const sources = [
-          'https://r.jina.ai/http://r.jina.ai/http://' + targetUrl,
-          'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl),
-          'https://corsproxy.io/?' + encodeURIComponent(targetUrl),
-          'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl)
-      ];
-      const errors = [];
-      for (const url of sources) {
-          try {
-              const json = await fetchJsonWithTimeout(url);
-              const data = json.data || json;
-              if (json.code === 0 && data && data.title) return data;
-              if (data && data.title) return data;
-              errors.push('接口返回异常');
-          } catch (e) {
-              console.warn('Bilibili metadata source failed:', url, e);
-              errors.push(e.message || String(e));
-          }
-      }
-      throw new Error(errors.slice(0, 3).join(' / '));
+      throw new Error('该功能只在站长的本地私有编辑器中提供');
   }
 
   function buildCoverCandidates(picUrl) {
